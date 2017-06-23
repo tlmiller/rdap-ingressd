@@ -3,7 +3,7 @@ package net.apnic.rdap;
 import com.netflix.zuul.ZuulFilter;
 import net.apnic.rdap.authority.RDAPAuthority;
 import net.apnic.rdap.filter.RDAPRequestPath;
-import net.apnic.rdap.filter.filters.RedirectFilter;
+import net.apnic.rdap.filter.filters.RedirectOrProxyFilter;
 import net.apnic.rdap.resource.ResourceLocator;
 import net.apnic.rdap.resource.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +47,7 @@ public class TestConfig {
             return Optional.ofNullable(pathToResource.apply(path));
         };
 
-        Function<Object, Optional<URI>> resouceToRedirect = resource -> {
+        Function<Object, Optional<RDAPAuthority>> resouceToAuthority = resource -> {
             RDAPAuthority authority = ((Supplier<RDAPAuthority>) (
                     () -> {
                         try {
@@ -56,13 +56,16 @@ public class TestConfig {
                             return null;
                         }
                     })).get();
-            return Optional.ofNullable(authority)
-                    .map(rdapAuthority -> rdapAuthority.getDefaultServerURI());
+            return Optional.ofNullable(authority);
         };
 
-        Function<HttpServletRequest, Optional<URI>> requestToRedirect = resouceToRedirect.compose(requestToResource);
+        Function<RDAPAuthority, URI> defaultUri = authority -> authority.getDefaultServerURI();
+        Function<RDAPAuthority, RedirectOrProxyFilter.Action> alwaysRedirect = authority -> RedirectOrProxyFilter.Action.REDIRECT;
 
-        return new RedirectFilter(requestToRedirect);
+
+        return new RedirectOrProxyFilter(resouceToAuthority.compose(requestToResource),
+                defaultUri,
+                alwaysRedirect
+        );
     }
-
 }
