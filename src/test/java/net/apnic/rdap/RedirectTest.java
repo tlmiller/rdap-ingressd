@@ -7,6 +7,7 @@ import net.apnic.rdap.resource.ResourceLocator;
 import net.apnic.rdap.resource.ResourceNotFoundException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.embedded.LocalServerPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -36,17 +37,13 @@ public class RedirectTest {
     @MockBean
     ResourceLocator<Object> locator;
 
-    @MockBean
-    Function<RDAPRequestPath, Object> pathToResource;
-
     @Test
     public void canRedirect() throws ResourceNotFoundException {
         //given
         RDAPAuthority authority = RDAPAuthority.createAnonymousAuthority();
         authority.addServer(URI.create("http://dont.care"));
-
-        when(pathToResource.apply(any())).thenReturn(AsnRange.parse("AS1"));
         when(locator.authorityForResource(any())).thenReturn(authority);
+
         String rdapRequestForRemoteResource = "/autnum/1";
 
         //when
@@ -56,5 +53,23 @@ public class RedirectTest {
 
         //then
         assertThat(response.getStatusCodeValue(), is(302));
+    }
+
+    @Test
+    public void returns400forAMalformedRequest() throws ResourceNotFoundException {
+        //given
+        RDAPAuthority authority = RDAPAuthority.createAnonymousAuthority();
+        authority.addServer(URI.create("http://dont.care"));
+        when(locator.authorityForResource(any())).thenReturn(authority);
+
+        String rdapRequestForRemoteResource = "/autnum/malformedRequest";
+
+        //when
+        ResponseEntity<String> response = new TestRestTemplate()
+                .getForEntity("http://localhost:" + this.port +
+                        rdapRequestForRemoteResource, String.class);
+
+        //then
+        assertThat(response.getStatusCodeValue(), is(400));
     }
 }

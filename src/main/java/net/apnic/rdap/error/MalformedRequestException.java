@@ -6,7 +6,7 @@ package net.apnic.rdap.error;
  * @see java.lang.Exception
  */
 public class MalformedRequestException
-    extends Exception
+    extends RuntimeException
 {
     /**
      * @see java.lang.Exception

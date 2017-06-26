@@ -3,8 +3,10 @@ package net.apnic.rdap.filter.filters;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
 import net.apnic.rdap.authority.RDAPAuthority;
+import net.apnic.rdap.error.MalformedRequestException;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
@@ -46,23 +48,31 @@ public class RedirectOrProxyFilter extends ZuulFilter {
 
     @Override
     public Object run() {
-        requestToAuthority.apply(RequestContext.getCurrentContext().getRequest())
-                .ifPresent(authority -> {
-                    URI uri = uriStrategy.apply(authority);
-                    switch (authorityAction.apply(authority)) {
-                        case REDIRECT:
-                            try {
-                                RequestContext.getCurrentContext().getResponse().sendRedirect(uri.toString());
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                            break;
-                        case PROXY:
-                            //TODO
-                            break;
-                    }
+        try {
+            requestToAuthority.apply(RequestContext.getCurrentContext().getRequest())
+                    .ifPresent(authority -> {
+                        URI uri = uriStrategy.apply(authority);
+                        switch (authorityAction.apply(authority)) {
+                            case REDIRECT:
+                                try {
+                                    RequestContext.getCurrentContext().getResponse().sendRedirect(uri.toString());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                break;
+                            case PROXY:
+                                //TODO
+                                break;
+                        }
 
-                });
+                    });
+        } catch (MalformedRequestException e) {
+            try {
+                RequestContext.getCurrentContext().getResponse().sendError(HttpServletResponse.SC_BAD_REQUEST);
+            } catch (IOException e1) {
+                throw new RuntimeException(e1);
+            }
+        }
 
         return null;
     }
