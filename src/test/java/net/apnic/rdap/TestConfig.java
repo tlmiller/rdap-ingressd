@@ -101,17 +101,8 @@ public class TestConfig {
             return Optional.ofNullable(pathToResource.apply(path));
         };
 
-        Function<Object, Optional<RDAPAuthority>> resouceToAuthority = resource -> {
-            RDAPAuthority authority = ((Supplier<RDAPAuthority>) (
-                    () -> {
-                        try {
-                            return resourceLocator.authorityForResource(resource);
-                        } catch (ResourceNotFoundException e) {
-                            return null;
-                        }
-                    })).get();
-            return Optional.ofNullable(authority);
-        };
+        Function<Optional<Object>, Optional<RDAPAuthority>> resouceToAuthority = optionalResource ->
+                optionalResource.map(resourceLocator::authorityForResource);
 
         Function<RDAPAuthority, URI> defaultUri = authority -> authority.getDefaultServerURI();
         Function<RDAPAuthority, RedirectOrProxyFilter.Action> alwaysRedirect = authority -> RedirectOrProxyFilter.Action.REDIRECT;

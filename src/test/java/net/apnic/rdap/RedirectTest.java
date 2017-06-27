@@ -35,7 +35,7 @@ public class RedirectTest {
     int port;
 
     @MockBean
-    ResourceLocator<Object> locator;
+    ResourceLocator<AsnRange> locator;
 
     @Test
     public void canRedirect() throws ResourceNotFoundException {
