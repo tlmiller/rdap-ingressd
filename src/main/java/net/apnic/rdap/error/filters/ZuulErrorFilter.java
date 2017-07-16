@@ -24,9 +24,7 @@ import org.springframework.http.HttpStatus;
 /**
  * Zuul filter for handling errors.
  */
-public class ZuulErrorFilter
-    extends ZuulFilter
-{
+public class ZuulErrorFilter {
     private static final String SEND_ERROR_FILTER_RAN = "sendErrorFilter.ran";
 
     private RDAPObjectFactory rdapObjectFactory = null;
@@ -41,42 +39,8 @@ public class ZuulErrorFilter
         return ExceptionUtils.indexOfThrowable(th, clazz) != -1;
     }
 
-    /**
-     * {@inheritDocs}
-     */
-    @Override
-    public String filterType()
+    public Object run(RequestContext context)
     {
-        return FilterConstants.ERROR_TYPE;
-    }
-
-    /**
-     * {@inheritDocs}
-     */
-    @Override
-    public int filterOrder()
-    {
-        return -1;
-    }
-
-    /**
-     * {@inheritDocs}
-     */
-    @Override
-    public boolean shouldFilter()
-    {
-        RequestContext context = RequestContext.getCurrentContext();
-        return context.getThrowable() != null
-            && context.getBoolean(SEND_ERROR_FILTER_RAN, false) == false;
-    }
-
-    /**
-     * {@inheritDocs}
-     */
-    @Override
-    public Object run()
-    {
-        RequestContext context = RequestContext.getCurrentContext();
         Throwable throwable = context.getThrowable();
 
         if(causedBy(throwable, MalformedRequestException.class))
