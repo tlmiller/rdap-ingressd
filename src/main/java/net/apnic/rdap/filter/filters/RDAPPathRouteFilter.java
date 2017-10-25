@@ -17,9 +17,7 @@ import net.apnic.rdap.resource.ResourceNotFoundException;
 
 import org.springframework.cloud.netflix.zuul.filters.support.FilterConstants;
 
-public abstract class RDAPPathRouteFilter
-    extends ZuulFilter
-{
+public abstract class RDAPPathRouteFilter {
     private Directory directory = null;
 
     public RDAPPathRouteFilter(Directory directory)
@@ -27,13 +25,11 @@ public abstract class RDAPPathRouteFilter
         this.directory = directory;
     }
 
-    @Override
     public int filterOrder()
     {
         return 1;
     }
 
-    @Override
     public String filterType()
     {
         return FilterConstants.ROUTE_TYPE;
@@ -44,15 +40,14 @@ public abstract class RDAPPathRouteFilter
         return directory;
     }
 
-    public RDAPRequestPath getRDAPRequestPath()
+    public RDAPRequestPath getRDAPRequestPath(RequestContext context)
     {
-        RequestContext context = RequestContext.getCurrentContext();
         return (RDAPRequestPath)context.get(RequestContextKeys.RDAP_REQUEST_PATH);
     }
 
-    public boolean shouldFilter()
+    public boolean shouldFilter(RequestContext context)
     {
-        RDAPRequestPath path = getRDAPRequestPath();
+        RDAPRequestPath path = getRDAPRequestPath(context);
         if(path == null)
         {
             return false;
@@ -60,11 +55,9 @@ public abstract class RDAPPathRouteFilter
         return supportedRequestType() == path.getRequestType();
     }
 
-    @Override
-    public Object run()
+    public Object run(RequestContext context)
     {
-        RequestContext context = RequestContext.getCurrentContext();
-        RDAPRequestPath path = getRDAPRequestPath();
+        RDAPRequestPath path = getRDAPRequestPath(context);
 
         try
         {
